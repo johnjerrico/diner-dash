@@ -61,7 +61,7 @@ export const useUniversalTime = (cfg:Config ) => {
                     if (startOfTime === null) {
                         startOfTime = DateTime.fromMillis(prev.current.toMillis());
                     }
-                    let isTicking:boolean  = prev.isTicking;
+                    let isTicking:boolean  = true;
                     let update:DateTime = prev.current.plus({second:cfg.tick * cfg.denominator/cfg.numerator});
                     let timediff:number = 0;
                     switch (cfg.duration.type){
@@ -91,4 +91,9 @@ export const useUniversalTime = (cfg:Config ) => {
             set({current: beginOfTime,isTicking:false});
         }
     }   
+}
+
+export const useReadUniversalTime = () =>{
+    const universalTime = useRecoilValue(universalTimeAtom);
+    return universalTime;
 }
