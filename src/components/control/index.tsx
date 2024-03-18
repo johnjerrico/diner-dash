@@ -1,12 +1,12 @@
 import {Clock} from 'components/control/clock';
 import {useState} from 'react';
 import {useUniversalTime} from 'hooks/useUniversalTime';
-export const Control = (cfg:{className:string})=>{
+export const Control = (props:{className:string})=>{
     const {universalTime,start,stop,reset}
      = useUniversalTime({
         numerator: 1000,
         denominator: 3600,
-        tick: 100,
+        tick: 1000,
         duration: {
             type: 'months',
             value:1
@@ -15,7 +15,7 @@ export const Control = (cfg:{className:string})=>{
     const [play,setPlay] = useState(false);
     const [regression, setRegression] = useState(false)
     return(
-        <div className={[cfg.className,"flex space-x-1"].join(" ")}>
+        <div className={[props.className,"flex space-x-1"].join(" ")}>
              <div className="grow h-14 border-black border-solid border pl-5" >
                 <h1>Calendar</h1>
                 <Clock className="w-64 h-14" time={universalTime.current}></Clock>

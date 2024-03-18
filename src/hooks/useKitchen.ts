@@ -1,24 +1,35 @@
-import {useRef, useEffect} from 'react';
+import {useRef} from 'react';
 import {atom,useSetRecoilState,useRecoilValue} from 'recoil';
 import {cloneDeep} from 'lodash';
 import {DateTime} from 'luxon';
+import { useEffectOnce } from './useEffectOnce';
 
+export enum Process {
+    Prep=1,
+    Serve,
+
+}
 type Config = {
     tick: number;
     numerator: number;
     denominator: number;
 }
+
 type Chef = {
     id:number;
     name:string; 
     capacity: number; 
 }
 
+type Timer = {
+    id?:number;
+    latest?:DateTime;
+}
 type Food = {
-    id:number;
+    id:string;
     prepTime: number;
     prep:{
-        current:DateTime;
+        current?:DateTime;
         start:()=>void
         stop:()=>void
     }
@@ -29,63 +40,74 @@ type Ticket = {
     tasks:Array<Food>;
 }
 
-type Timer = {
-    latest?:DateTime;
-    id:number;
-}
-
-
 const ticketsAtom = atom<Array<Ticket>>({
     key: 'ticketAtom',
-    default:[
+    default:[]
+});
 
-    ]
-})
+let prevState:Process;
 
-const newFood = (id:number,cfg:Config) => {
-        const ref = useRef<Timer>({id:0});
-        let howLongWillItRun = "00:00:00";
-        const prepTime = Math.round(Math.random()*10);
-        if (prepTime/10 > 0) {
-            howLongWillItRun = "00:"+prepTime+":00";
-        } else {
-            howLongWillItRun = "00:0"+prepTime+":00";
-        }
-        const base = DateTime.fromSQL(howLongWillItRun);
-        let current = (ref.current.latest === undefined)?base:ref.current.latest;
-        useEffect(()=>{
-            return()=>{
-                clearTimeout(ref.current.id);
-            }
-        })
-        return {
-            id: id,
-            prepTime: prepTime,
-            prep: {
-                current: current, 
-                start:()=>{
-                    ref.current.id = setInterval(()=>{
-                        current  = current.minus({seconds:cfg.tick * cfg.denominator/cfg.numerator})
-                        ref.current.latest = current;
-                        if (current.toSeconds() < 0){
-                           clearTimeout(ref.current.id); 
-                        }   
-
-                    },cfg.tick)
-                },
-                stop:()=>{
-                    clearTimeout(ref.current.id)
-                }
-            }
-        }
-} 
-export const useKitchen = (cfg:Config) => {
+export const useKitchen = (cfg:Config) => {    
     const tickets = useRecoilValue(ticketsAtom);
     const setRecoilState = useSetRecoilState(ticketsAtom);
     const set = (newState:(Array<Ticket>|((prev:Array<Ticket>)=>Array<Ticket>)))=>{
         setRecoilState((prev:Array<Ticket>)=>(typeof(newState)==='function' ?newState(prev):newState));
     };
-    useEffect(()=>{
+    let refs = useRef<{[id:string]:Timer}>({})
+    const newFood = (ticket:Ticket) => {
+            let howLongWillItRun = "00:00:00";
+            const prepTime = Math.round(Math.random()*50)+10;
+            howLongWillItRun = "00:"+prepTime+":00";
+            const base = DateTime.fromSQL(howLongWillItRun);
+            const taskId = ticket.pic.id + "_" + ticket.tasks.length;
+            const food:Food = {
+                id: taskId,
+                prepTime: prepTime,
+                prep: {
+                    start:()=>{
+                        let current = (refs.current[taskId] !== undefined && refs.current[taskId].latest !== undefined) ? refs.current[taskId].latest: base;
+                        refs.current[taskId] = {
+                            id:setInterval(()=>{
+                                console.log("starting",taskId);
+                                current  = current?.minus({seconds:cfg.tick * cfg.denominator/cfg.numerator})
+                                set((prev:Array<Ticket>)=>{
+                                    const tickets:Array<Ticket> = cloneDeep(prev);
+                                    const searchTicket:Array<Ticket> = tickets.filter(
+                                        item => item.pic.id === ticket.pic.id
+                                    );
+                                    const currentTicket:Ticket = searchTicket[0];
+                                    if (current?.toSeconds()??0 < 0){
+                                        clearTimeout(refs.current[taskId]?.id); 
+                                        currentTicket.tasks = currentTicket.tasks.filter(
+                                            item => item.id !== taskId
+                                        )
+                                        delete refs.current[taskId];
+                                    } else {
+                                        const currentTask = currentTicket.tasks.find(
+                                            item => item.id === taskId
+                                        )
+                                        if (currentTask !== undefined)
+                                            currentTask.prep.current = current;
+                                    }
+                                    return [
+                                        ...tickets
+                                    ] 
+                                });
+                            },cfg.tick)
+                        } 
+                    },
+                    stop:()=>{
+                        if (refs.current[taskId] !== undefined)
+                        clearTimeout(refs.current[taskId].id)
+                    }
+                }
+            }
+            if (prevState === Process.Prep){
+                food.prep.start();
+            }
+            return food
+    }
+    useEffectOnce(()=>{
         return () => {
             tickets.forEach((ticket:Ticket)=>{
                 ticket.tasks.forEach((food:Food)=>{
@@ -93,7 +115,7 @@ export const useKitchen = (cfg:Config) => {
                 })
             })
         }
-    },[tickets])
+    });
     return {
         tickets,
         hire:()=>{
@@ -108,23 +130,44 @@ export const useKitchen = (cfg:Config) => {
         },
         fire:()=>{
             set((prev:Array<Ticket>)=>{
+                const search = prev.find(item=>item.pic.id === prev.length-1)
+                search?.tasks.forEach((food:Food)=>{
+                    food.prep.stop();
+                });
                 return prev.filter(
                     item => item.pic.id !== prev.length-1
                 )
             })
         },
-        cook:(id:number)=>{
+        order:(id:number)=>{
             set((prev:Array<Ticket>)=>{
-                const search:Array<Ticket> = prev.filter(
+                const tickets = cloneDeep(prev)
+                const search = tickets.find(
                     item => item.pic.id === id
                 );
-                const current:Ticket = cloneDeep(search[0]);
-                current.tasks = [...current.tasks,newFood(current.tasks.length,cfg)]
+                if (search !== undefined)
+                search.tasks = [...search.tasks,newFood(search)]
                 return [
-                    ...prev.filter(item => item.pic.id !== id),
-                    current
+                    ...tickets
                 ]
             })
+        },
+        process:(kind:Process)=>{
+            if (prevState !== kind && prevState !== undefined){
+                tickets.forEach((ticket:Ticket)=>{
+                    ticket.tasks.forEach((task:Food)=>{
+                        switch (kind) {
+                            case Process.Prep:
+                                task.prep.start(); 
+                                break; 
+                            default:
+                                task.prep.stop();
+                                break;
+                        }
+                    }); 
+                });
+            }
+            prevState = kind;
         }
     }
 }

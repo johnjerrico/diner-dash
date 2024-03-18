@@ -1,8 +1,20 @@
-import {useKitchen} from 'hooks/useKitchen';
+import {useEffect} from 'react';
+import {useKitchen,Process} from 'hooks/useKitchen';
 
-export const Kitchen = (cfg:{className:string}) => {
-    const {tickets,fire,hire,cook} = useKitchen()
-    return (<div className={[cfg.className,"flex flex-col"].join(" ")}>
+export const Kitchen = (props:{className:string,play:boolean}) => {
+    const {tickets,fire,hire,order,process} = useKitchen({
+        numerator: 1000,
+        denominator: 3600,
+        tick: 1000,
+    })
+    useEffect(()=>{
+        if (props.play){
+            process(Process.Prep);
+        }else{
+            process(Process.Serve);
+        }
+    })
+    return (<div className={[props.className,"flex flex-col"].join(" ")}>
         <div className="flex items-center justify-end w-full h-8 space-x-1">
             <label>Chefs</label>
             <button className="h-8 w-8 rounded-full bg-neutral-950 text-white hover:bg-neutral-600" onClick={fire}> -</button>
@@ -21,16 +33,16 @@ export const Kitchen = (cfg:{className:string}) => {
                                 {
                                     ticket.tasks.map((item,idx)=>(
                                         <div  key={idx} className="bg-neutral-950 rounded-full w-8 h-8">
-                                            <span className="inline-block align-middle">{item.prepTime}</span>
+                                            <span className="inline-block align-middle text-white">{item.prep.current === undefined ?item.prepTime:item.prep.current.minute}</span>
                                         </div>
                                     ))
                                 }
-                                <button className="border-black border-solid border w-full hover:bg-neutral-100" onClick={()=>cook(ticket.pic.id)}>cook</button>
+                                <button className="border-black border-solid border w-full hover:bg-neutral-100" onClick={()=>order(ticket.pic.id)}>cook</button>
                             </div>
                         </div>);
                     })
                 }
-            </div>
+            </div> 
         </div>
     </div>)
 }
