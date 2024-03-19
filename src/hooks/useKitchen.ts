@@ -56,7 +56,7 @@ export const useKitchen = (cfg:Config) => {
     let refs = useRef<{[id:string]:Timer}>({})
     const newFood = (ticket:Ticket) => {
             let howLongWillItRun = "00:00:00";
-            const prepTime = Math.round(Math.random()*50)+10;
+            const prepTime = Math.round(Math.random()*10)+5;
             howLongWillItRun = "00:"+prepTime+":00";
             const base = DateTime.fromSQL(howLongWillItRun);
             const taskId = ticket.pic.id + "_" + ticket.tasks.length;
@@ -68,7 +68,6 @@ export const useKitchen = (cfg:Config) => {
                         let current = (refs.current[taskId] !== undefined && refs.current[taskId].latest !== undefined) ? refs.current[taskId].latest: base;
                         refs.current[taskId] = {
                             id:setInterval(()=>{
-                                console.log("starting",taskId);
                                 current  = current?.minus({seconds:cfg.tick * cfg.denominator/cfg.numerator})
                                 set((prev:Array<Ticket>)=>{
                                     const tickets:Array<Ticket> = cloneDeep(prev);
@@ -76,7 +75,8 @@ export const useKitchen = (cfg:Config) => {
                                         item => item.pic.id === ticket.pic.id
                                     );
                                     const currentTicket:Ticket = searchTicket[0];
-                                    if (current?.toSeconds()??0 < 0){
+                                    console.log(current);
+                                    if (current !== undefined && current.minute == 0){
                                         clearTimeout(refs.current[taskId]?.id); 
                                         currentTicket.tasks = currentTicket.tasks.filter(
                                             item => item.id !== taskId
