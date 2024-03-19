@@ -145,8 +145,9 @@ export const useKitchen = (cfg:Config) => {
                 const search = tickets.find(
                     item => item.pic.id === id
                 );
-                if (search !== undefined)
-                search.tasks = [...search.tasks,newFood(search)]
+                if (search !== undefined && search.tasks.length < search.pic.capacity){
+                    search.tasks = [...search.tasks,newFood(search)]
+                }
                 return [
                     ...tickets
                 ]
