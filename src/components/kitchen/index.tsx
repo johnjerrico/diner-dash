@@ -4,8 +4,8 @@ import {useKitchen,Process} from 'hooks/useKitchen';
 export const Kitchen = (props:{className:string,play:boolean}) => {
     const {tickets,fire,hire,order,process} = useKitchen({
         numerator: 1000,
-        denominator: 3600,
-        tick: 1000,
+        denominator: 60,
+        tick: 100,
     })
     useEffect(()=>{
         if (props.play){

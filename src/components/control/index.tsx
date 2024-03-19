@@ -5,8 +5,8 @@ export const Control = (props:{className:string})=>{
     const {universalTime,start,stop,reset}
      = useUniversalTime({
         numerator: 1000,
-        denominator: 3600,
-        tick: 1000,
+        denominator: 60,
+        tick: 100,
         duration: {
             type: 'months',
             value:1
