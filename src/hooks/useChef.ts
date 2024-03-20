@@ -46,8 +46,18 @@ const ticketsAtom = atom<Array<Ticket>>({
 });
 
 let prevState:Process;
-
-export const useKitchen = (cfg:Config) => {    
+const chefNames:Array<string> = [
+    "jason",
+    "mark",
+    "atom",
+    "boy",
+    "leo",
+    "lucas",
+    "cena",
+    "john",
+    "carmack"
+]
+export const useChef = (cfg:Config) => {    
     const tickets = useRecoilValue(ticketsAtom);
     const setRecoilState = useSetRecoilState(ticketsAtom);
     const set = (newState:(Array<Ticket>|((prev:Array<Ticket>)=>Array<Ticket>)))=>{
@@ -119,11 +129,14 @@ export const useKitchen = (cfg:Config) => {
     return {
         tickets,
         hire:()=>{
+            let pick:number = Math.round(Math.random()*(chefNames.length-1));
+            let name:string = chefNames[pick];
+            console.log(name,chefNames,chefNames.length,pick)
             set((prev:Array<Ticket>)=>[...prev,{
                 pic: {
                     id: prev.length,
-                    name: "a"+ prev.length,
-                    capacity: Math.round(Math.random() * 10)
+                    name: name,
+                    capacity: Math.round(Math.random() * 10) + 5
                 },
                 tasks: [],
             }])
