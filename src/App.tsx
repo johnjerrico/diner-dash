@@ -1,5 +1,5 @@
 import {Control} from 'components/control';
-import {Kitchen} from 'src/components/kitchen';
+import {Chef} from 'src/components/chef';
 import {useReadUniversalTime} from 'hooks/useUniversalTime'
 function App() {
   const universalTime = useReadUniversalTime()
@@ -10,7 +10,7 @@ function App() {
       <div className="container mt-2 space-x-2 flex h-full">
           <div className="grow h-14"></div>
           <div className="flex-none w-1/4 h-full">
-            <Kitchen className="mt-2" play={universalTime.isTicking}></Kitchen>
+            <Chef className="mt-2" play={universalTime.isTicking}></Chef>
           </div>
       </div>
     </div>
