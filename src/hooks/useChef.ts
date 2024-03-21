@@ -67,7 +67,11 @@ export const useChef = (cfg:Config) => {
     const newFood = (ticket:Ticket) => {
             let howLongWillItRun = "00:00:00";
             const prepTime = Math.round(Math.random()*10)+5;
-            howLongWillItRun = "00:"+prepTime+":00";
+            if (prepTime / 10 >= 1) {
+                howLongWillItRun = "00:"+prepTime+":00";
+            } else {
+                howLongWillItRun = "00:0"+prepTime+":00";
+            }
             const base = DateTime.fromSQL(howLongWillItRun);
             const taskId = ticket.pic.id + "_" + ticket.tasks.length;
             const food:Food = {
@@ -85,7 +89,6 @@ export const useChef = (cfg:Config) => {
                                         item => item.pic.id === ticket.pic.id
                                     );
                                     const currentTicket:Ticket = searchTicket[0];
-                                    console.log(current);
                                     if (current !== undefined && current.minute == 0){
                                         clearTimeout(refs.current[taskId]?.id); 
                                         currentTicket.tasks = currentTicket.tasks.filter(
@@ -98,6 +101,8 @@ export const useChef = (cfg:Config) => {
                                         )
                                         if (currentTask !== undefined)
                                             currentTask.prep.current = current;
+                                        if (refs.current[taskId] !== undefined)
+                                            refs.current[taskId].latest = current;
                                     }
                                     return [
                                         ...tickets
