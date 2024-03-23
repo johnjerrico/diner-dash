@@ -10,7 +10,7 @@ function App() {
       <div className="container mt-2 space-x-2 flex h-full pb-10">
           <div className="grow h-14"></div>
           <div className="flex-none w-1/4 h-full">
-            <Chef className="mt-2" play={universalTime.isTicking}></Chef>
+            <Chef play={universalTime.isTicking}></Chef>
           </div>
       </div>
     </div>

@@ -1,7 +1,9 @@
 import {useEffect} from 'react';
-import {useChef,Process} from 'src/hooks/useChef';
+import {useChef,Process} from 'hooks/useChef';
+import {useFood} from 'hooks/useFood';
 
-export const Chef = (props:{className:string,play:boolean}) => {
+export const Chef = (props:{className?:string,play:boolean}) => {
+    const {foods} = useFood();
     const {tickets,fire,hire,order,process} = useChef({
         numerator: 1000,
         denominator: 60,
@@ -15,8 +17,12 @@ export const Chef = (props:{className:string,play:boolean}) => {
         }
     })
     
-    return (<div className={[props.className,"flex flex-col"].join(" ")}>
-        <div className="flex items-center justify-end w-full h-8 space-x-1">
+    return (<div className={[props.className??"","flex flex-col"].join(" ")}>
+        <div className="w-full border border-black border-solid flex flex-col items-end justify-end pr-1 pb-1 mt-2">
+            <label>Food</label>
+            <label className="font-bold text-5xl">{foods/100 > 1 ? foods : (foods/10) > 1 ? '0'+foods : '00'+foods }</label>
+        </div>
+        <div className="flex items-center justify-end w-full space-x-1 mt-2">
             <label>Chefs</label>
             <button className="h-8 w-8 rounded-full bg-neutral-950 text-white hover:bg-neutral-600" onClick={fire}> -</button>
             <button className="h-8 w-8 rounded-full bg-neutral-950 text-white hover:bg-neutral-600" onClick={hire}>+</button>
