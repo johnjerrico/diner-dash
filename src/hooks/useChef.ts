@@ -2,7 +2,8 @@ import {useRef} from 'react';
 import {atom,useSetRecoilState,useRecoilValue} from 'recoil';
 import {cloneDeep} from 'lodash';
 import {DateTime} from 'luxon';
-import { useEffectOnce } from './useEffectOnce';
+import {useEffectOnce} from './useEffectOnce';
+import {useFood} from './useFood';
 
 export enum Process {
     Prep=1,
@@ -55,13 +56,18 @@ const chefNames:Array<string> = [
     "lucas",
     "cena",
     "john",
-    "carmack"
+    "carmack",
+    "jay",
+    "leno",
+    "lena",
+    "lee"
 ]
-export const useChef = (cfg:Config) => {    
+export const useChef = (cfg:Config) => {
+    const {plate} = useFood();    
     const tickets = useRecoilValue(ticketsAtom);
-    const setRecoilState = useSetRecoilState(ticketsAtom);
+    const setTicketState = useSetRecoilState(ticketsAtom);
     const set = (newState:(Array<Ticket>|((prev:Array<Ticket>)=>Array<Ticket>)))=>{
-        setRecoilState((prev:Array<Ticket>)=>(typeof(newState)==='function' ?newState(prev):newState));
+        setTicketState((prev:Array<Ticket>)=>(typeof(newState)==='function' ?newState(prev):newState));
     };
     let refs = useRef<{[id:string]:Timer}>({})
     const newFood = (ticket:Ticket) => {
@@ -89,7 +95,7 @@ export const useChef = (cfg:Config) => {
                                         item => item.pic.id === ticket.pic.id
                                     );
                                     const currentTicket:Ticket = searchTicket[0];
-                                    if (current !== undefined && current.minute == 0){
+                                    if (current !== undefined && current.minute === 0){
                                         clearTimeout(refs.current[taskId]?.id); 
                                         currentTicket.tasks = currentTicket.tasks.filter(
                                             item => item.id !== taskId
@@ -108,6 +114,9 @@ export const useChef = (cfg:Config) => {
                                         ...tickets
                                     ] 
                                 });
+                                if (current !== undefined && current.minute === 0){
+                                    plate()
+                                }
                             },cfg.tick)
                         } 
                     },
